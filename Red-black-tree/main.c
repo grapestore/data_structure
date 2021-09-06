@@ -111,6 +111,7 @@ void Fixed(rbtree *root, node_t* node){
       }
         //RR
       else if(node->parent == node->parent->parent->right && node == node->parent->right){
+
           temp_color->color = node->parent->color;
           node->parent->color = node->parent->parent->color;
           node->parent->parent->color = temp_color->color;
@@ -147,7 +148,6 @@ void insert_rbtree(const rbtree* t, key_t key){
     if(temp_t->root ==NULL){
         temp_t->root = (node_t *)calloc(sizeof(node_t), 1);
     }
-    t->root->key = 10;
   
     // root->root 노드들
     node_t *new = (node_t*)malloc(sizeof(node_t));
@@ -183,11 +183,32 @@ void insert_rbtree(const rbtree* t, key_t key){
     }
 }
 
+void print(rbtree *t, node_t* start) // 출력하는 함수
+{
+    node_t *curr;
+    if (start == NULL){
+        curr = t->root->left;
+    }
+    else{
+        curr = start;
+    }
+    if(curr == NULL){
+        return;
+    }
+    if (curr->left != NULL){
+        print(t, curr->left);
+    }
+    printf("%d\n", curr->key);
+    if (curr->right != NULL){
+    print(t, curr->right);
+    }
+}
+
 int main(){
     //node_t *root = NULL;
     rbtree *root = new_rbtree();
 
-    insert_rbtree((rbtree *)root,10);
+    insert_rbtree(root,10);
     insert_rbtree(root,20);
     insert_rbtree(root,30);
     insert_rbtree(root,25);
@@ -195,6 +216,7 @@ int main(){
     insert_rbtree(root,512);
     node_t *p = rbtree_find(root, 512);
     node_t *q = rbtree_find(root, 1024);
+    print(root, NULL);
 
 
 }
