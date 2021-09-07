@@ -14,15 +14,24 @@ typedef struct {
   node_t *root;
 } rbtree;
 
+node_t _NIL = {
+    .color = RBTREE_BLACK,
+    .key = 0,
+    .parent = NULL,
+    .left = NULL,
+    .right = NULL
+};
+node_t *NIL = &_NIL;
+
 rbtree *new_rbtree(void) {
   rbtree *p = (rbtree *)calloc(sizeof(rbtree), 1);
   return p;
 }
 
-node_t *rbtree_find(const rbtree *t, const key_t key) {
-    node_t *curr = (t->root->left);
+node_t *rbtree_find(rbtree *t, const key_t key) {
+    node_t *curr = (t->root);
     node_t *pre_curr = NULL;
-    while(curr != NULL){
+    while(curr != NIL){
         pre_curr = curr;
         if(curr->key > key){
             curr = curr->left;
@@ -31,11 +40,9 @@ node_t *rbtree_find(const rbtree *t, const key_t key) {
             curr = curr->right;
         }
         else{
-            printf("key is\n");
             return curr;
         }
     }
-    printf("no key\n");
     return curr;
 }
 
@@ -47,7 +54,7 @@ void left_Rotate(rbtree* root,node_t* node){
     }
     child->parent = node->parent;
     if(node->parent == NULL){
-        (root->root->left) = child;
+        (root->root) = child;
     }
     else if(node == node->parent->left){
         node->parent->left = child;
@@ -68,7 +75,7 @@ void right_Rotate(rbtree* root,node_t* node){
     }
     child->parent = node->parent;
     if(child->parent == NULL){
-        (root->root->left) = child;
+        (root->root) = child;
     }
     else if(node == node->parent->left){
         node->parent->left = child;
@@ -81,7 +88,7 @@ void right_Rotate(rbtree* root,node_t* node){
 }
 
 void Fixed(rbtree *root, node_t* node){
-  while(node != root->root->left && node->parent->color == RBTREE_RED){
+  while(node != root->root && node->parent->color == RBTREE_RED){
     node_t* temp;
     
     if(node->parent == node->parent->parent->right){
@@ -107,7 +114,7 @@ void Fixed(rbtree *root, node_t* node){
           node->color = node->parent->parent->color;
           node->parent->parent->color = temp_color->color;
           left_Rotate(root,node->parent);
-          right_Rotate(root,node->parent->parent);
+          right_Rotate(root,node->parent);
       }
         //RR
       else if(node->parent == node->parent->parent->right && node == node->parent->right){
@@ -124,7 +131,7 @@ void Fixed(rbtree *root, node_t* node){
           node->color = node->parent->parent->color;
           node->parent->parent->color = temp_color->color;
           right_Rotate(root, node->parent);
-          left_Rotate(root, node->parent->parent);
+          left_Rotate(root, node->parent);
       }
       free(temp_color);
     }
@@ -135,34 +142,95 @@ void Fixed(rbtree *root, node_t* node){
       node = node->parent->parent;
       }
     }
-  (root->root->left)->color = RBTREE_BLACK;
+  (root->root)->color = RBTREE_BLACK;
 }
 
-void insert_rbtree(const rbtree* t, key_t key){
-//     if(t->root ==NULL){
-//     rbtree *temp_t = (rbtree *)calloc(sizeof(rbtree), 1);
-//     node_t *p = (node_t *)calloc(sizeof(node_t), 1);
-//     temp_t = t;
-//   }
-    rbtree *temp_t = t;
-    if(temp_t->root ==NULL){
-        temp_t->root = (node_t *)calloc(sizeof(node_t), 1);
+void delete_fixed(rbtree* t, node_t* x){
+    node_t* sibling = NULL;
+    if(x->color == RBTREE_RED){
+        x->color = RBTREE_BLACK;
+        return;
     }
-  
+    if(x == x->parent->left){
+        sibling = x->parent->right;
+        if(sibling->color == RBTREE_RED){
+            sibling->color = RBTREE_BLACK;
+            sibling->left->color = RBTREE_RED;
+            left_Rotate(t, sibling->parent);
+            sibling = x->parent->right;
+        }
+        if(sibling->left->color ==RBTREE_BLACK && sibling->right->color == RBTREE_BLACK){
+            sibling->color = RBTREE_RED;
+            x->parent->color = RBTREE_BLACK;
+            return;
+        }
+        else if(sibling->left->color == RBTREE_RED && sibling->right->color == RBTREE_BLACK){
+            node_t temp;
+            temp.color = sibling->color;
+            sibling->color = sibling->left->color;
+            sibling->left->color = temp.color;
+            right_Rotate(t, sibling);
+            sibling = x->parent->right;
+        }
+        if(sibling->right->color == RBTREE_RED){
+            sibling->color = x->parent->color;
+            x->parent->color = RBTREE_BLACK;
+            sibling->right->color = RBTREE_BLACK;
+            left_Rotate(t, x->parent);
+        }
+        t->root->color = RBTREE_BLACK;
+        return;
+    }
+    else{
+        sibling = x->parent->left;
+        if(sibling->color == RBTREE_RED){
+            sibling->color = RBTREE_BLACK;
+            sibling->right->color = RBTREE_RED;
+            right_Rotate(t, sibling->parent);
+            sibling = x->parent->left;
+        }
+        if(sibling->left->color ==RBTREE_BLACK && sibling->right->color == RBTREE_BLACK){
+            sibling->color = RBTREE_RED;
+            x->parent->color = RBTREE_BLACK;
+            return;
+        }
+        else if(sibling->left->color == RBTREE_RED && sibling->right->color == RBTREE_BLACK){
+            node_t temp;
+            temp.color = sibling->color;
+            sibling->color = sibling->left->color;
+            sibling->left->color = temp.color;
+            right_Rotate(t, sibling);
+            sibling = x->parent->right;
+        }
+        if(sibling->right->color == RBTREE_RED){
+            sibling->color = x->parent->color;
+            x->parent->color = RBTREE_BLACK;
+            sibling->right->color = RBTREE_BLACK;
+            right_Rotate(t, x->parent);
+        }
+        t->root->color = RBTREE_BLACK;
+        return;
+    }
+
+}
+
+void insert_rbtree(rbtree* t, key_t key){
+
     // root->root 노드들
     node_t *new = (node_t*)malloc(sizeof(node_t));
     new->key = key;
     new->left = new->right = new->parent = NULL;
-    node_t *curr = (t->root->left);
+    node_t *curr = (t->root);
     node_t *pre_curr = NULL;
-    if(t->root->left == NULL){
+    if(t->root == NULL){
         new->color = RBTREE_BLACK;
-        t->root->left = new;
+        t->root = new;
         curr = new;
+        new->right = NIL;
+        new->left = NIL;
     }
     else{
-        
-        while(curr != NULL){
+        while(curr != NIL){
             pre_curr = curr;
             if(new->key > curr->key){
                 curr = curr->right;
@@ -179,44 +247,108 @@ void insert_rbtree(const rbtree* t, key_t key){
             pre_curr->left = new;
         }
         new->color = RBTREE_RED;
-        Fixed((rbtree*) t, new);
+        new->right = NIL;
+        new->left = NIL;
+        Fixed(t, new);
     }
+}
+
+void rbtree_erase(rbtree *t, key_t key) {
+
+    // p -> 변경 p->key
+    node_t* target = rbtree_find(t,key);
+    node_t* closer = NULL;
+
+    // closer 자리에 올라올 애
+    node_t* fixed_x = NULL;
+    // 차일드가 둘다 있을때
+    if(target->left != NIL && target->right != NIL){
+        // closer(successor)를 찾는 코드
+        closer = target->right;
+        int count = 0;
+        while(closer->left!=NIL){
+            closer = closer->left;
+            count ++;
+        }
+        target->key = closer->key;
+        fixed_x = closer->right;
+        fixed_x->parent = closer->parent;
+        if(closer == closer->parent->right){closer->parent->right = closer->right;}
+        else if(closer == closer->parent->left){closer->parent->left = closer->right;}
+    }
+    // child가 left 하나만 있는 경우
+    else if(target->left != NIL || target->right != NIL){
+        if(target->left != NIL){
+            closer = target->left;
+            target->key = closer->key;
+            fixed_x = closer;
+            fixed_x->parent = closer->parent;
+            if(closer == closer->parent->right){closer->parent->right = closer->right;}
+            else if(closer == closer->parent->left){closer->parent->left = closer->right;}
+        }
+    }
+    // child가 없는 경우
+    else{
+        if(target == target->parent->right){target->parent->right = NIL;}
+        else{target->parent->left = NIL;}
+    }
+    if(closer != NULL && closer->color == RBTREE_BLACK){delete_fixed(t, fixed_x);}
+    free(closer);
 }
 
 void print(rbtree *t, node_t* start) // 출력하는 함수
 {
     node_t *curr;
-    if (start == NULL){
-        curr = t->root->left;
+    if (start == NIL){
+        curr = t->root;
     }
     else{
         curr = start;
     }
-    if(curr == NULL){
+    if(curr == NIL){
         return;
     }
-    if (curr->left != NULL){
+    if (curr->left != NIL){
         print(t, curr->left);
     }
-    printf("%d\n", curr->key);
-    if (curr->right != NULL){
+    printf("%d ", curr->key);
+    if (curr->right != NIL){
     print(t, curr->right);
     }
+}
+
+void min(rbtree *t){
+    node_t *curr = (t->root);
+    while(curr->left != NIL){
+        curr = curr->left;
+    }
+    printf("%d\n",curr->key);
+}
+
+void max(rbtree *t){
+    node_t *curr = (t->root);
+    while(curr->right != NIL){
+        curr = curr->right;
+    }
+    printf("%d\n",curr->key);
 }
 
 int main(){
     //node_t *root = NULL;
     rbtree *root = new_rbtree();
 
-    insert_rbtree(root,10);
-    insert_rbtree(root,20);
     insert_rbtree(root,30);
+    insert_rbtree(root,10);
     insert_rbtree(root,25);
-    insert_rbtree(root,5);
-    insert_rbtree(root,512);
-    node_t *p = rbtree_find(root, 512);
+    insert_rbtree(root,55);
+    insert_rbtree(root,40);
+    insert_rbtree(root,60);
+    node_t *p = rbtree_find(root, 40);
     node_t *q = rbtree_find(root, 1024);
-    print(root, NULL);
-
-
+    printf("\n");
+    rbtree_erase(root, 30);
+    rbtree_erase(root, 25);
+    min(root);
+    max(root);
+    // print(root, NIL);
 }
