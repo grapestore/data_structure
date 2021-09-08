@@ -126,7 +126,6 @@ void Fixed(rbtree *root, node_t* node){
       }
         //RL
       else if(node->parent == node->parent->parent->right && node == node->parent->left){
-
           temp_color->color = node->color;
           node->color = node->parent->parent->color;
           node->parent->parent->color = temp_color->color;
@@ -228,7 +227,6 @@ void replace_node(node_t* n, node_t* child){
 
 
 void insert_rbtree(rbtree* t, key_t key){
-
     // root->root 노드들
     node_t *new = (node_t*)malloc(sizeof(node_t));
     new->key = key;
@@ -268,25 +266,33 @@ int rbtree_erase(rbtree *t, int key) {
     node_t* target = rbtree_find(t,key);
     node_t* closer = NULL;
 
-    // closer 자리에 올라올 애
-    node_t* fixed_x = NULL;
-    // 차일드가 둘다 있을때 rigth 로 간다
+    // 차일드가 둘다 있을때 right 로 간다 bst 방법중 하나
     if(target->right != NULL){
-        // closer(successor)를 찾는 코드
+        // closer(successor)를 찾는 코드 (지워질 노드에 가장 근사값)
         closer = target->right;
         while(closer->left!=NULL){
             closer = closer->left;
         }
+        // 값 복사를 통해 복잡한 링크하는 과정을 패스 할 수 있음
         target->key = closer->key;
         if(closer->right != NULL){
+        // 원래는 NIL node가 존재 해야하지만 NIL노드 없이 구현하기 위해 NULL check를 한다
+        // 위키디피아 참조
+        // 뒤에 인자를 앞에 인자의 위치에 놓게 한다
             replace_node(closer,closer->right);
             if(closer != NULL && closer->color == RBTREE_BLACK){delete_fixed(t, closer->right);}
         }
+        // 우측에서 올라오는 노드가 NULL인경우 sibiling을 찾을 수 없기 때문에
+        // 최종적으로 삭제되는 노드의 위치정보를 delete fixed에 넘겨줌으로써
+        // 우측 null node(NIL)의 정보를 알 수 있다.
         else{
             if(closer != NULL && closer->color == RBTREE_BLACK){delete_fixed(t, closer);}
+        // 대신 이러한 경우에 최종적으로 삭제되는 노드를 NIL노드 대신 사용했기때문에
+        // delete_fixed후에 연결을 끊어줌과 free 선언이 필요하다
             if(closer->parent->left == closer){closer->parent->left = NULL;}
             else if(closer->parent->right == closer){closer->parent->right = NULL;}
         }
+        free(target);
         free(closer);
         return 0;
     }
@@ -298,7 +304,7 @@ int rbtree_erase(rbtree *t, int key) {
             replace_node(target, closer);
             if(closer != NULL && closer->color == RBTREE_BLACK){delete_fixed(t, closer);}
         }
-        free(closer);
+        free(target);
         return 0;
     }
     // child가 없는 경우
@@ -307,6 +313,9 @@ int rbtree_erase(rbtree *t, int key) {
             t->root = NULL;
         }
         else{
+        // child가 없는 경우에도 bst와 달리 색 체크를 해주어야 하기 때문에
+        // 최종적으로 삭제되는 노드가 블랙일 경우 sibling check를 통해
+        // 기존과 동일하게 진행 되어야 한다.
             if(target->color == RBTREE_BLACK){delete_fixed(t, target);}
             if(target == target->parent->right){target->parent->right = NULL;}
             else{target->parent->left = NULL;}
@@ -371,4 +380,8 @@ int main(){
     min(root);
     max(root);
     // print(root, NIL);
+
+    //mac os 시스템 리크 체크함수
+    //system("leaks a.out");
+
 }
