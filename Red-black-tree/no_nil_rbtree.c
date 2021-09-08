@@ -292,7 +292,6 @@ int rbtree_erase(rbtree *t, int key) {
             if(closer->parent->left == closer){closer->parent->left = NULL;}
             else if(closer->parent->right == closer){closer->parent->right = NULL;}
         }
-        free(target);
         free(closer);
         return 0;
     }
@@ -304,7 +303,7 @@ int rbtree_erase(rbtree *t, int key) {
             replace_node(target, closer);
             if(closer != NULL && closer->color == RBTREE_BLACK){delete_fixed(t, closer);}
         }
-        free(target);
+        free(closer);
         return 0;
     }
     // child가 없는 경우
@@ -382,6 +381,6 @@ int main(){
     // print(root, NIL);
 
     //mac os 시스템 리크 체크함수
-    //system("leaks a.out");
+    system("leaks a.out");
 
 }
