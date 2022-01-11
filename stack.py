@@ -28,7 +28,7 @@ class Stack:
     return is_empty
 
   def top(self):
-    
+
     data = None
     if self.isEmpty():
       print("stack is empty")
@@ -42,5 +42,11 @@ if __name__ == "__main__":
   print(a.top())
   a.push(10)
   print(a.top())
+  a.push(20)
+  print(a.top())
+  a.push(30)
+  print(a.top())
+  print(a.pop())
+  print(a.pop())
   print(a.pop())
   
