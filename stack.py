@@ -28,6 +28,7 @@ class Stack:
     return is_empty
 
   def top(self):
+    
     data = None
     if self.isEmpty():
       print("stack is empty")
